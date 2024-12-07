@@ -1,8 +1,11 @@
 ﻿#Requires AutoHotkey v2.0
+#SingleInstance Force
+
+ConfigurationPath := ".\sh.ini"
 
 ReadConfig() {
     DeviceIndex := 0
-    try DeviceIndex := IniRead("C:\Users\Luca\Documents\AutoHotkey\sh.ini", "Config", "mute-device-index")
+    try DeviceIndex := IniRead(ConfigurationPath, "Config", "mute-device-index")
     ;MsgBox "Selected device: #" DeviceIndex
     return DeviceIndex
 }
@@ -40,7 +43,7 @@ SelectDevice() {
         Result := MsgBox("Hai selezionato il dispositivo #" numero "`n" nome "`n`nConfermi?",, "YesNo")
         if Result = "Yes" {
 
-            IniWrite numero, "C:\Users\Luca\Documents\AutoHotkey\sh.ini", "Config", "mute-device-index"
+            IniWrite numero, ConfigurationPath, "Config", "mute-device-index"
             MsgBox "Informazioni salvate. Al prossimo avvio non ti verrà chiesto nuovamente. Per cambiare le impostazioni elimina il file sh.ini"
         }
         
@@ -50,7 +53,38 @@ SelectDevice() {
     myGui.Show()
 }
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 SavedDevice := ReadConfig()
 if(SavedDevice==0) {
     SelectDevice()
+}
+SelectedDeviceName := SoundGetName(, SavedDevice)
+
+;ToDo: permettere configurazione tasto
+;ToDo: single click = toggle, long press = push to talk
+
+Pause:: {
+    SoundSetMute -1 ,, SavedDevice
+    mute_state := SoundGetMute(, SavedDevice)
+    if mute_state {
+        TraySetIcon "imageres.dll", 234
+
+        TrayTip ;Chiude il tooltip prima di aprirlo
+        TrayTip "Device muted", SelectedDeviceName, 20 ;20=4+16=Tray+Mute
+        SetTimer () => TrayTip(), -1000
+
+        try SoundPlay "ferma-riproduzione"
+        SoundPlay A_WinDir "\Media\Windows Hardware Remove.wav"
+
+    } else {
+        TraySetIcon "imageres.dll", 231
+
+        TrayTip ;Chiude il tooltip prima di aprirlo
+        TrayTip "Device NOT muted", SelectedDeviceName, 20 ;20=4+16=Tray+Mute
+        SetTimer () => TrayTip(), -1000
+
+        try SoundPlay "ferma-riproduzione"
+        SoundPlay A_WinDir "\Media\Windows Hardware Insert.wav"
+    }
 }
