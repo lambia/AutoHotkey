@@ -60,14 +60,20 @@ if(SavedDevice==0) {
     SelectDevice()
 }
 SelectedDeviceName := SoundGetName(, SavedDevice)
+isDeviceMuted := SoundGetMute(, SavedDevice)
+if isDeviceMuted {
+    TraySetIcon "imageres.dll", 234
+} else {
+    TraySetIcon "imageres.dll", 231
+}
 
 ;ToDo: permettere configurazione tasto
 ;ToDo: single click = toggle, long press = push to talk
 
 Pause:: {
     SoundSetMute -1 ,, SavedDevice
-    mute_state := SoundGetMute(, SavedDevice)
-    if mute_state {
+    isDeviceMuted := SoundGetMute(, SavedDevice)
+    if isDeviceMuted {
         TraySetIcon "imageres.dll", 234
 
         TrayTip ;Chiude il tooltip prima di aprirlo
