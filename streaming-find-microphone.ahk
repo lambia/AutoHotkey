@@ -54,21 +54,16 @@ SelectDevice() {
         numero := table.GetText(RowNumber, 1)
         nome := table.GetText(RowNumber, 2)
 
-        Result := MsgBox("Hai selezionato il dispositivo #" numero "`n" nome "`n`nConfermi?",, "YesNo")
-        if Result = "Yes" {
+        global IsNotified := myGui.isNotified.value
+        global IsAlerted := myGui.isAlerted.value
 
-            global IsNotified := myGui.isNotified.value
-            global IsAlerted := myGui.isAlerted.value
+        IniWrite numero, ConfigurationPath, "Device", "index"
+        IniWrite IsNotified, ConfigurationPath, "Notifications", "enabled"
+        IniWrite IsAlerted, ConfigurationPath, "Alert", "enabled"
 
-            IniWrite numero, ConfigurationPath, "Device", "index"
-            IniWrite IsNotified, ConfigurationPath, "Notifications", "enabled"
-            IniWrite IsAlerted, ConfigurationPath, "Alert", "enabled"
-            MsgBox "Informazioni salvate. Al prossimo avvio non ti verrà chiesto nuovamente. Per cambiare le impostazioni elimina il file sh.ini"
-
-            ReadConfig()
-            
-            myGui.Destroy()
-        }
+        ReadConfig()
+        
+        myGui.Destroy()
         
     }
 
@@ -82,8 +77,17 @@ if(SavedDevice==0) {
     SelectDevice()
 }
 
+A_TrayMenu.Add()
+A_TrayMenu.Add("Impostazioni", MyCallback)
+
+MyCallback(ItemName, ItemPos, MyMenu) {
+    SelectDevice()
+}
+
+;ToDo: nel ri-configuratore mostrare i valori attuali
 ;ToDo: permettere configurazione tasto
 ;ToDo: single click = toggle, long press = push to talk
+;ToDo: Single click tray?
 
 #HotIf SavedDevice!=0
 Pause:: {
@@ -103,6 +107,4 @@ Pause:: {
         SoundPlay A_WinDir "\Media\Windows Hardware " (isDeviceMuted ? "Remove" : "Insert") ".wav"
     }
 }
-#HotIf
-
 
