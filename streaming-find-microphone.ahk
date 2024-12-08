@@ -33,7 +33,7 @@ SelectDevice() {
     loop 3
         table.ModifyCol(A_Index, 'AutoHdr Logical')
 
-    MyGui.Add("Text",, "Please double click on the chosen device")
+    myGui.Add("Text",, "Please double click on the chosen device")
 
     OnTableRowDoubleClick(table, RowNumber)
     {
@@ -45,6 +45,8 @@ SelectDevice() {
 
             IniWrite numero, ConfigurationPath, "Config", "mute-device-index"
             MsgBox "Informazioni salvate. Al prossimo avvio non ti verrà chiesto nuovamente. Per cambiare le impostazioni elimina il file sh.ini"
+
+            TraySetIcon "imageres.dll", SoundGetMute(, nome) ? 234 : 231
         }
         
         myGui.Destroy()
@@ -58,21 +60,19 @@ SelectDevice() {
 SavedDevice := ReadConfig()
 if(SavedDevice==0) {
     SelectDevice()
-}
-SelectedDeviceName := SoundGetName(, SavedDevice)
-isDeviceMuted := SoundGetMute(, SavedDevice)
-if isDeviceMuted {
-    TraySetIcon "imageres.dll", 234
 } else {
-    TraySetIcon "imageres.dll", 231
+    SelectedDeviceName := SoundGetName(, SavedDevice)
+    TraySetIcon "imageres.dll", SoundGetMute(, SelectedDeviceName) ? 234 : 231
 }
 
 ;ToDo: permettere configurazione tasto
 ;ToDo: single click = toggle, long press = push to talk
 
+#HotIf SavedDevice!=0
 Pause:: {
     SoundSetMute -1 ,, SavedDevice
     isDeviceMuted := SoundGetMute(, SavedDevice)
+
     if isDeviceMuted {
         TraySetIcon "imageres.dll", 234
 
@@ -94,3 +94,6 @@ Pause:: {
         SoundPlay A_WinDir "\Media\Windows Hardware Insert.wav"
     }
 }
+#HotIf
+
+
