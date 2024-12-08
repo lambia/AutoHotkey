@@ -45,9 +45,9 @@ SelectDevice() {
     loop 3
         table.ModifyCol(A_Index, 'AutoHdr Logical')
 
-    myGui.Add("Text",, "Please double click on the chosen device")
-    myGui.isNotified := myGui.Add("CheckBox", "", "Abilita notifiche testuali windows")
-    myGui.isAlerted := myGui.Add("CheckBox", "checked", "Abilita avviso sonoro")
+    myGui.Add("Text",, "TO SAVE: double click on the device")
+    myGui.isNotified := myGui.Add("CheckBox", IsNotified ? "checked" : "", "Abilita notifiche testuali windows")
+    myGui.isAlerted := myGui.Add("CheckBox", IsAlerted ? "checked" : "", "Abilita avviso sonoro")
 
     OnTableRowDoubleClick(table, RowNumber)
     {
@@ -84,7 +84,7 @@ MyCallback(ItemName, ItemPos, MyMenu) {
     SelectDevice()
 }
 
-;ToDo: nel ri-configuratore mostrare i valori attuali
+;ToDo: aggiungi pulsante "save" invece di doppio-click
 ;ToDo: permettere configurazione tasto
 ;ToDo: single click = toggle, long press = push to talk
 ;ToDo: Single click tray?
