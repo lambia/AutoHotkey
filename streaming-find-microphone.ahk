@@ -73,26 +73,14 @@ Pause:: {
     SoundSetMute -1 ,, SavedDevice
     isDeviceMuted := SoundGetMute(, SavedDevice)
 
-    if isDeviceMuted {
-        TraySetIcon "imageres.dll", 234
+    TraySetIcon "imageres.dll", isDeviceMuted ? 234 : 231
 
-        TrayTip ;Chiude il tooltip prima di aprirlo
-        TrayTip "Device muted", SelectedDeviceName, 20 ;20=4+16=Tray+Mute
-        SetTimer () => TrayTip(), -1000
+    TrayTip ;Chiude il tooltip prima di aprirlo
+    TrayTip "Device is " (isDeviceMuted ? "" : "NOT ") "muted", SelectedDeviceName, 20 ;20=4+16=Tray+Mute
+    SetTimer () => TrayTip(), -1000
 
-        try SoundPlay "ferma-riproduzione"
-        SoundPlay A_WinDir "\Media\Windows Hardware Remove.wav"
-
-    } else {
-        TraySetIcon "imageres.dll", 231
-
-        TrayTip ;Chiude il tooltip prima di aprirlo
-        TrayTip "Device NOT muted", SelectedDeviceName, 20 ;20=4+16=Tray+Mute
-        SetTimer () => TrayTip(), -1000
-
-        try SoundPlay "ferma-riproduzione"
-        SoundPlay A_WinDir "\Media\Windows Hardware Insert.wav"
-    }
+    try SoundPlay "ferma-riproduzione"
+    SoundPlay A_WinDir "\Media\Windows Hardware " (isDeviceMuted ? "Remove" : "Insert") ".wav"
 }
 #HotIf
 
