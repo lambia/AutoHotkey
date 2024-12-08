@@ -2,20 +2,32 @@
 #SingleInstance Force
 
 ConfigurationPath := ".\sh.ini"
+SavedDevice := 0
+IsNotified := 0
+IsAlerted := 1
+SelectedDeviceName := ""
+
+IconFile := "imageres.dll"
+IconMuted := 231
+IconNotMuted := 234
 
 ReadConfig() {
-    DeviceIndex := 0
-    try DeviceIndex := IniRead(ConfigurationPath, "Config", "mute-device-index")
-    ;MsgBox "Selected device: #" DeviceIndex
-    return DeviceIndex
+    try global IsNotified := IniRead(ConfigurationPath, "Notifications", "enabled")
+    try global IsAlerted := IniRead(ConfigurationPath, "Alert", "enabled")
+    try global SavedDevice := IniRead(ConfigurationPath, "Device", "index")
+
+    if(SavedDevice!=0) {
+        global SelectedDeviceName := SoundGetName(, SavedDevice)
+        TraySetIcon IconFile, SoundGetMute(, SelectedDeviceName) ? IconMuted : IconNotMuted
+    }
+
+    ;MsgBox "Selected device: #" SavedDevice "
 }
 
 SelectDevice() {
     myGui := Gui(, "Streaming Hotkeys v. 0.2")
     table := myGui.Add('ListView', "w400 h200", ["#", "Device", "Volume"])
     table.OnEvent("DoubleClick", OnTableRowDoubleClick)
-
-    devMap := Map()
 
     loop
     {
@@ -34,6 +46,8 @@ SelectDevice() {
         table.ModifyCol(A_Index, 'AutoHdr Logical')
 
     myGui.Add("Text",, "Please double click on the chosen device")
+    myGui.isNotified := myGui.Add("CheckBox", "", "Abilita notifiche testuali windows")
+    myGui.isAlerted := myGui.Add("CheckBox", "checked", "Abilita avviso sonoro")
 
     OnTableRowDoubleClick(table, RowNumber)
     {
@@ -43,13 +57,19 @@ SelectDevice() {
         Result := MsgBox("Hai selezionato il dispositivo #" numero "`n" nome "`n`nConfermi?",, "YesNo")
         if Result = "Yes" {
 
-            IniWrite numero, ConfigurationPath, "Config", "mute-device-index"
+            global IsNotified := myGui.isNotified.value
+            global IsAlerted := myGui.isAlerted.value
+
+            IniWrite numero, ConfigurationPath, "Device", "index"
+            IniWrite IsNotified, ConfigurationPath, "Notifications", "enabled"
+            IniWrite IsAlerted, ConfigurationPath, "Alert", "enabled"
             MsgBox "Informazioni salvate. Al prossimo avvio non ti verrà chiesto nuovamente. Per cambiare le impostazioni elimina il file sh.ini"
 
-            TraySetIcon "imageres.dll", SoundGetMute(, nome) ? 234 : 231
+            ReadConfig()
+            
+            myGui.Destroy()
         }
         
-        myGui.Destroy()
     }
 
     myGui.Show()
@@ -57,12 +77,9 @@ SelectDevice() {
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SavedDevice := ReadConfig()
+ReadConfig()
 if(SavedDevice==0) {
     SelectDevice()
-} else {
-    SelectedDeviceName := SoundGetName(, SavedDevice)
-    TraySetIcon "imageres.dll", SoundGetMute(, SelectedDeviceName) ? 234 : 231
 }
 
 ;ToDo: permettere configurazione tasto
@@ -73,14 +90,18 @@ Pause:: {
     SoundSetMute -1 ,, SavedDevice
     isDeviceMuted := SoundGetMute(, SavedDevice)
 
-    TraySetIcon "imageres.dll", isDeviceMuted ? 234 : 231
+    TraySetIcon IconFile, isDeviceMuted ? IconMuted : IconNotMuted
 
-    TrayTip ;Chiude il tooltip prima di aprirlo
-    TrayTip "Device is " (isDeviceMuted ? "" : "NOT ") "muted", SelectedDeviceName, 20 ;20=4+16=Tray+Mute
-    SetTimer () => TrayTip(), -1000
+    if(isNotified==1) {
+        TrayTip ;Chiude il tooltip prima di aprirlo
+        TrayTip "Device is " (isDeviceMuted ? "" : "NOT ") "muted", SelectedDeviceName, 20 ;20=4+16=Tray+Mute
+        SetTimer () => TrayTip(), -1000
+    }
 
-    try SoundPlay "ferma-riproduzione"
-    SoundPlay A_WinDir "\Media\Windows Hardware " (isDeviceMuted ? "Remove" : "Insert") ".wav"
+    if(isAlerted==1) {
+        try SoundPlay "ferma-riproduzione"
+        SoundPlay A_WinDir "\Media\Windows Hardware " (isDeviceMuted ? "Remove" : "Insert") ".wav"
+    }
 }
 #HotIf
 
